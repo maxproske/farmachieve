@@ -1,0 +1,16 @@
+{
+  "name": "farmachieve-quiz-pet",
+  "version": "1.0.0",
+  "description": "Chrome extension that adds pettable farm animals to pharmacy quiz pages",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -p tsconfig.json --watch",
+    "dev": "concurrently \"npm run watch\" \"node reload-extension.js\"",
+    "reload-watch": "node reload-extension.js"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "typescript": "^5.3.3",
+    "concurrently": "^8.2.2"
+  }
+}

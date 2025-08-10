@@ -1,0 +1,99 @@
+/* FarmAchieve Quiz Pet Styles */
+
+.qp-pet-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  background: transparent;
+}
+
+.qp-animal {
+  position: absolute;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: left 2s ease-in-out, top 2s ease-in-out;
+  z-index: 10;
+}
+
+.qp-animal:hover {
+  filter: brightness(1.1);
+}
+
+.qp-animal:focus {
+  outline: 2px solid #4A90E2;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.qp-flip {
+  transform: scaleX(-1);
+}
+
+/* Heart animation */
+.qp-heart {
+  position: absolute;
+  pointer-events: none;
+  z-index: 20;
+  animation: qp-heart-rise 2s ease-out forwards;
+}
+
+@keyframes qp-heart-rise {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.5);
+  }
+  20% {
+    transform: translateY(-10px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-80px) scale(0.8);
+  }
+}
+
+/* Sprite rendering */
+.qp-animal div {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .qp-animal {
+    transition: none;
+  }
+  
+  @keyframes qp-heart-rise {
+    0% {
+      opacity: 1;
+      transform: scale(0.5);
+    }
+    20% {
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .qp-animal {
+    /* Ensure animals stay visible on small screens */
+    max-width: 64px;
+    max-height: 64px;
+  }
+}
+
+/* Focus styles for accessibility */
+.qp-animal:focus-visible {
+  outline: 3px solid #4A90E2;
+  outline-offset: 3px;
+}
