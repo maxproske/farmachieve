@@ -478,7 +478,7 @@ function createPetContainer(animalConfig: typeof ANIMALS[0], trigger: boolean | 
 // Find target elements and inject pets
 function scanAndInjectPets(): void {
   // TEMPORARY: 100 animals for testing/benchmarking
-  const TESTING_MODE = true;
+  const TESTING_MODE = false;
   const TEST_ANIMAL_COUNT = 100;
   
   if (TESTING_MODE) {
@@ -513,8 +513,8 @@ function scanAndInjectPets(): void {
   for (const el of startElements) {
     const text = el.textContent?.trim() || "";
     if (text.includes("Start Attempt") && !document.querySelector('[data-pet-key^="start"]')) {
-      // Create 1-3 random animals for start
-      const animalCount = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3 animals
+      // Create 1-2 random animals for start
+      const animalCount = 1 + Math.floor(Math.random() * 2); // 1 or 2 animals
       for (let i = 0; i < animalCount; i++) {
         const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
         const petContainer = createPetContainer(randomAnimal, true, i);
@@ -526,8 +526,8 @@ function scanAndInjectPets(): void {
 
   // Check if we're on login page by URI
   if (window.location.pathname.includes('/login/index.php') && !document.querySelector('[data-pet-key^="login"]')) {
-    // Create 1-3 random animals for login page
-    const animalCount = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3 animals
+    // Create 1-2 random animals for login page
+    const animalCount = 1 + Math.floor(Math.random() * 2); // 1 or 2 animals
     for (let i = 0; i < animalCount; i++) {
       const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
       const petContainer = createPetContainer(randomAnimal, "login", i);
@@ -541,8 +541,8 @@ function scanAndInjectPets(): void {
     const text = p.textContent?.trim() || "";
     if (text.includes("You've finished the attempt, thank you for taking the quiz!") && 
         !document.querySelector('[data-pet-key^="end"]')) {
-      // Create 1-3 random animals for end
-      const animalCount = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3 animals
+      // Create 3-5 random animals for end
+      const animalCount = 3 + Math.floor(Math.random() * 3); // 3, 4, or 5 animals
       for (let i = 0; i < animalCount; i++) {
         const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
         const petContainer = createPetContainer(randomAnimal, false, i);
