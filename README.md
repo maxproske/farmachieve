@@ -4,7 +4,7 @@ A minimal Chrome Extension that adds wandering, pettable Stardew Valley farm ani
 
 ## Features
 
-- 🐔 Randomly spawns cute farm animals (duck, chicken, cow) that appear anywhere on screen when quiz pages load
+- 🐔 Randomly spawns cute farm animals (duck, chicken, cow, pig, sheep, goat) that appear anywhere on screen when quiz pages load
 - 💖 First click triggers animated heart sprites from Stardew Valley - subsequent clicks won't re-trigger
 - 🚶‍♂️ Animals wander freely across the entire screen using proper directional animations (down/right/up/left movement)
 - 🌟 Full-screen transparent overlay - animals don't interfere with page layout or functionality
@@ -60,9 +60,8 @@ farmachieve/
 ├── dist/contentScript.js  # Compiled JavaScript
 ├── styles.css             # Pet container and animation styles
 ├── assets/                # Stardew Valley sprites
-│   ├── duck.png
-│   ├── chicken.png
-│   ├── cow.png
+│   ├── duck.png, chicken.png, cow.png
+│   ├── pig.png, sheep.png, goat.png
 │   └── heart.png
 └── spritesheets/          # Original sprite files
 ```

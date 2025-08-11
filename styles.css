@@ -15,19 +15,11 @@
   position: absolute;
   cursor: pointer;
   pointer-events: auto;
-  transition: left 2s ease-in-out, top 2s ease-in-out;
+  transition: left 1s linear, top 1s linear;
   z-index: 10;
 }
 
-.qp-animal:hover {
-  filter: brightness(1.1);
-}
-
-.qp-animal:focus {
-  outline: 2px solid #4A90E2;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
+/* Removed hover/focus effects for pure sprite feel */
 
 .qp-flip {
   transform: scaleX(-1);
@@ -38,21 +30,7 @@
   position: absolute;
   pointer-events: none;
   z-index: 20;
-  animation: qp-heart-rise 2s ease-out forwards;
-}
-
-@keyframes qp-heart-rise {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(0.5);
-  }
-  20% {
-    transform: translateY(-10px) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-80px) scale(0.8);
-  }
+  /* No CSS animation - controlled by JavaScript */
 }
 
 /* Sprite rendering */
@@ -67,20 +45,6 @@
   .qp-animal {
     transition: none;
   }
-  
-  @keyframes qp-heart-rise {
-    0% {
-      opacity: 1;
-      transform: scale(0.5);
-    }
-    20% {
-      transform: scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(0.8);
-    }
-  }
 }
 
 /* Responsive adjustments */
@@ -92,8 +56,4 @@
   }
 }
 
-/* Focus styles for accessibility */
-.qp-animal:focus-visible {
-  outline: 3px solid #4A90E2;
-  outline-offset: 3px;
-}
+/* Focus styles removed for pure sprite feel */
