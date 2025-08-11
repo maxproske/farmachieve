@@ -3,6 +3,12 @@
   "name": "FarmAchieve Quiz Pet",
   "version": "1.0.0",
   "description": "Adds wandering, pettable farm animals to pharmacy quiz pages for motivation",
+  "icons": {
+    "16": "assets/favicon.webp",
+    "32": "assets/favicon.webp",
+    "48": "assets/favicon.webp",
+    "128": "assets/favicon.webp"
+  },
   "permissions": [],
   "content_scripts": [
     {

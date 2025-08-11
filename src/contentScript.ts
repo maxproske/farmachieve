@@ -86,7 +86,8 @@ const ANIMALS = [
     frameW: 16, frameH: 16, cols: 4, scale: 2,
     moveChance: 0.8, // Most active
     idleTime: [800, 1500], // 0.8-1.5s idle
-    moveSpeed: 1.2 // Quick movement
+    moveSpeed: 1.2, // Quick movement
+    hasLeftRow: true // Chicken has dedicated left row (row 3)
   },
   { 
     name: "cow", 
@@ -131,7 +132,7 @@ const DIRECTION_ROWS = {
   down: 0,
   right: 1, 
   up: 2,
-  left: 3  // Will use flipped right if not available
+  left: 1  // Use right row with flip for most animals (except chicken which has dedicated left)
 };
 
 // Get appropriate row for movement direction
@@ -144,10 +145,10 @@ function getRowForDirection(dx: number, dy: number): number {
 }
 
 // Create a wandering pet container
-function createPetContainer(animalConfig: typeof ANIMALS[0], isStart: boolean): HTMLElement {
+function createPetContainer(animalConfig: typeof ANIMALS[0], isStart: boolean, index: number = 0): HTMLElement {
   const container = document.createElement("div");
   container.className = "qp-pet-container";
-  container.setAttribute("data-pet-key", isStart ? "start" : "end");
+  container.setAttribute("data-pet-key", isStart ? `start-${index}` : `end-${index}`);
 
   // Create sprite with proper scaling and walk timing
   const sprite = createSprite({
@@ -171,8 +172,22 @@ function createPetContainer(animalConfig: typeof ANIMALS[0], isStart: boolean): 
   let wanderTimer: number | null = null;
   const animalSize = animalConfig.frameW * animalConfig.scale; // Actual size based on scale
   const margin = 32; // 2rem margin (2 * 16px)
-  let currentX = margin + Math.random() * (window.innerWidth - animalSize - margin * 2); // Random start position with margin
-  let currentY = margin + Math.random() * (window.innerHeight - animalSize - margin * 2);
+  
+  // Use document dimensions instead of window dimensions for absolute positioning
+  const docWidth = Math.max(document.documentElement.scrollWidth, window.innerWidth);
+  const docHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight);
+  
+  // Spread animals out by using index-based offset to reduce overlap
+  const baseX = margin + Math.random() * (docWidth - animalSize - margin * 2);
+  const baseY = margin + Math.random() * (docHeight - animalSize - margin * 2);
+  
+  // Add some offset based on index to spread them out
+  const spreadDistance = 150; // Minimum distance between animals
+  const offsetX = (index % 2) * spreadDistance + (Math.random() - 0.5) * 100;
+  const offsetY = Math.floor(index / 2) * spreadDistance + (Math.random() - 0.5) * 100;
+  
+  let currentX = Math.max(margin, Math.min(docWidth - animalSize - margin, baseX + offsetX));
+  let currentY = Math.max(margin, Math.min(docHeight - animalSize - margin, baseY + offsetY));
   let isMoving = false;
 
   // Start in idle state - no animation, frame 0 (standing pose)
@@ -226,31 +241,40 @@ function createPetContainer(animalConfig: typeof ANIMALS[0], isStart: boolean): 
       let newX = currentX;
       let newY = currentY;
       
-      // Calculate new position based on direction with 2rem margin
+      // Calculate new position based on direction with 2rem margin (using document bounds)
       switch (direction) {
         case 'up':
           newY = Math.max(margin, currentY - moveDistance);
           break;
         case 'down':
-          newY = Math.min(window.innerHeight - animalSize - margin, currentY + moveDistance);
+          newY = Math.min(docHeight - animalSize - margin, currentY + moveDistance);
           break;
         case 'left':
           newX = Math.max(margin, currentX - moveDistance);
           break;
         case 'right':
-          newX = Math.min(window.innerWidth - animalSize - margin, currentX + moveDistance);
+          newX = Math.min(docWidth - animalSize - margin, currentX + moveDistance);
           break;
       }
       
       // Only move if there's actually a change
       if (newX !== currentX || newY !== currentY) {
         // Set appropriate sprite row and start walking animation
-        let spriteRow = DIRECTION_ROWS[direction as keyof typeof DIRECTION_ROWS];
+        let spriteRow;
         
-        // Handle left movement with flipping if sprite doesn't have left row
-        if (direction === 'left' && spriteRow === DIRECTION_ROWS.right) {
-          animal.classList.add("qp-flip");
+        if (direction === 'left') {
+          if (animalConfig.hasLeftRow) {
+            // Animal has dedicated left row (like chicken)
+            spriteRow = 3;
+            animal.classList.remove("qp-flip");
+          } else {
+            // Use flipped right row for left movement
+            spriteRow = DIRECTION_ROWS.right;
+            animal.classList.add("qp-flip");
+          }
         } else {
+          // Normal directional movement
+          spriteRow = DIRECTION_ROWS[direction as keyof typeof DIRECTION_ROWS];
           animal.classList.remove("qp-flip");
         }
         
@@ -298,6 +322,9 @@ function createPetContainer(animalConfig: typeof ANIMALS[0], isStart: boolean): 
   const showHearts = () => {
     if (isClicked) return;
     isClicked = true;
+    
+    // Remove click cursor and disable further interactions
+    animal.classList.add("qp-loved");
 
     // Create single animated heart sprite (50% larger)
     const heartSprite = createSprite({
@@ -324,7 +351,7 @@ function createPetContainer(animalConfig: typeof ANIMALS[0], isStart: boolean): 
     
     container.appendChild(heartWrapper);
     
-    // Custom heart animation sequence: row 1 → row 6 → row 1 reverse
+    // Custom heart animation sequence: row 1 → row 6 → row 6 → row 1 reverse
     let step = 0;
     const animationSteps = [
       // Row 1 forward: frames 1,2,3,4
@@ -332,7 +359,12 @@ function createPetContainer(animalConfig: typeof ANIMALS[0], isStart: boolean): 
       { row: 0, frame: 1 },
       { row: 0, frame: 2 },
       { row: 0, frame: 3 },
-      // Row 6 forward: frames 1,2,3,4 (row 5 in 0-based)
+      // Row 6 forward: frames 1,2,3,4 (row 5 in 0-based) - FIRST TIME
+      { row: 5, frame: 0 },
+      { row: 5, frame: 1 },
+      { row: 5, frame: 2 },
+      { row: 5, frame: 3 },
+      // Row 6 forward: frames 1,2,3,4 (row 5 in 0-based) - SECOND TIME
       { row: 5, frame: 0 },
       { row: 5, frame: 1 },
       { row: 5, frame: 2 },
@@ -350,10 +382,16 @@ function createPetContainer(animalConfig: typeof ANIMALS[0], isStart: boolean): 
         heartSprite.setRow(row);
         heartSprite.setFrame(frame);
         
-        // Update heart position to follow animal if it's moving
+        // Update heart position to follow animal's real-time position
         const heartSize = 16 * 2.25; // 36px
-        heartWrapper.style.left = `${currentX + (animalSize - heartSize) / 2}px`; // Center horizontally
-        heartWrapper.style.top = `${currentY - 48}px`; // Maintain vertical offset
+        
+        // Get the animal's current position from CSS (which changes during transitions)
+        const computedStyle = window.getComputedStyle(animal);
+        const currentAnimalX = parseFloat(computedStyle.left) || currentX;
+        const currentAnimalY = parseFloat(computedStyle.top) || currentY;
+        
+        heartWrapper.style.left = `${currentAnimalX + (animalSize - heartSize) / 2}px`; // Center horizontally
+        heartWrapper.style.top = `${currentAnimalY - 48}px`; // Maintain vertical offset
         
         step++;
         setTimeout(playCustomAnimation, 90); // ~11fps (1.5x slower than doubled)
@@ -393,10 +431,13 @@ function scanAndInjectPets(): void {
   const startElements = Array.from(document.querySelectorAll("button, input[type='submit'], a"));
   for (const el of startElements) {
     const text = el.textContent?.trim() || "";
-    if (text.includes("Start Attempt") && !document.querySelector('[data-pet-key="start"]')) {
-      const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
-      const petContainer = createPetContainer(randomAnimal, true);
-      document.body.appendChild(petContainer);
+    if (text.includes("Start Attempt") && !document.querySelector('[data-pet-key^="start"]')) {
+      // Create 3 random animals for start
+      for (let i = 0; i < 3; i++) {
+        const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+        const petContainer = createPetContainer(randomAnimal, true, i);
+        document.body.appendChild(petContainer);
+      }
       break;
     }
   }
@@ -406,10 +447,13 @@ function scanAndInjectPets(): void {
   for (const p of paragraphs) {
     const text = p.textContent?.trim() || "";
     if (text.includes("You've finished the attempt, thank you for taking the quiz!") && 
-        !document.querySelector('[data-pet-key="end"]')) {
-      const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
-      const petContainer = createPetContainer(randomAnimal, false);
-      document.body.appendChild(petContainer);
+        !document.querySelector('[data-pet-key^="end"]')) {
+      // Create 3 random animals for end
+      for (let i = 0; i < 3; i++) {
+        const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+        const petContainer = createPetContainer(randomAnimal, false, i);
+        document.body.appendChild(petContainer);
+      }
       break;
     }
   }
