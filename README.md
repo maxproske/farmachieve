@@ -4,7 +4,7 @@ A minimal Chrome Extension that adds wandering, pettable Stardew Valley farm ani
 
 ## Features
 
-- 🐔 Spawns 3 random farm animals (duck, chicken, cow, pig, sheep, goat) that appear anywhere in the document when quiz pages load
+- 🐔 Spawns 1-3 random farm animals (duck, chicken, cow, pig, sheep, goat) that appear anywhere in the document on quiz pages and login pages
 - 💖 First click triggers animated heart sprites from Stardew Valley - subsequent clicks won't re-trigger
 - 🚶‍♂️ Animals wander freely across the entire screen using proper directional animations (down/right/up/left movement)
 - 🌟 Full-screen transparent overlay - animals don't interfere with page layout or functionality
@@ -26,9 +26,9 @@ A minimal Chrome Extension that adds wandering, pettable Stardew Valley farm ani
    - Click "Load unpacked"
    - Select the `farmachieve` directory
 
-3. **Visit a quiz page**:
+3. **Visit a quiz or login page**:
    - Go to `https://qbank.pharmachieve.com/*`
-   - Look for cute animals before "Start Attempt" buttons and after completion messages!
+   - Look for cute animals on `/login/index.php` pages, "Start Attempt" buttons, and after quiz completion!
 
 ## Development
 

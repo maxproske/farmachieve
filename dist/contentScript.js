@@ -55,9 +55,10 @@ const ANIMALS = [
         idleTime: [1000, 2000], // 1-2s idle
         moveSpeed: 1.5 // Fast movement
     },
+    // Chickens - all color variants
     {
-        name: "chicken",
-        url: "assets/chicken.png",
+        name: "chicken_brown",
+        url: "assets/chicken_brown.png",
         frameW: 16, frameH: 16, cols: 4, scale: 2,
         moveChance: 0.8, // Most active
         idleTime: [800, 1500], // 0.8-1.5s idle
@@ -65,9 +66,45 @@ const ANIMALS = [
         hasLeftRow: true // Chicken has dedicated left row (row 3)
     },
     {
-        name: "cow",
-        url: "assets/cow.png",
-        frameW: 16, frameH: 16, cols: 4, scale: 4,
+        name: "chicken_white",
+        url: "assets/chicken_white.png",
+        frameW: 16, frameH: 16, cols: 4, scale: 2,
+        moveChance: 0.8, // Most active
+        idleTime: [800, 1500], // 0.8-1.5s idle
+        moveSpeed: 1.2, // Quick movement
+        hasLeftRow: true // Chicken has dedicated left row (row 3)
+    },
+    {
+        name: "chicken_blue",
+        url: "assets/chicken_blue.png",
+        frameW: 16, frameH: 16, cols: 4, scale: 2,
+        moveChance: 0.8, // Most active
+        idleTime: [800, 1500], // 0.8-1.5s idle
+        moveSpeed: 1.2, // Quick movement
+        hasLeftRow: true // Chicken has dedicated left row (row 3)
+    },
+    {
+        name: "chicken_void",
+        url: "assets/chicken_void.png",
+        frameW: 16, frameH: 16, cols: 4, scale: 2,
+        moveChance: 0.8, // Most active
+        idleTime: [800, 1500], // 0.8-1.5s idle
+        moveSpeed: 1.2, // Quick movement
+        hasLeftRow: true // Chicken has dedicated left row (row 3)
+    },
+    // Cows - all color variants
+    {
+        name: "cow_brown",
+        url: "assets/cow_brown.png",
+        frameW: 16, frameH: 16, cols: 4, scale: 3,
+        moveChance: 0.3, // Slow and steady
+        idleTime: [3000, 5000], // 3-5s idle
+        moveSpeed: 3.0 // Slow movement
+    },
+    {
+        name: "cow_white",
+        url: "assets/cow_white.png",
+        frameW: 16, frameH: 16, cols: 4, scale: 3,
         moveChance: 0.3, // Slow and steady
         idleTime: [3000, 5000], // 3-5s idle
         moveSpeed: 3.0 // Slow movement
@@ -95,7 +132,7 @@ const ANIMALS = [
         moveChance: 0.6, // Active
         idleTime: [1500, 2500], // 1.5-2.5s idle
         moveSpeed: 1.8 // Fairly quick movement
-    }
+    },
 ];
 // Check if reduced motion is preferred
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -116,10 +153,21 @@ function getRowForDirection(dx, dy) {
     }
 }
 // Create a wandering pet container
-function createPetContainer(animalConfig, isStart, index = 0) {
+function createPetContainer(animalConfig, trigger, index = 0) {
     const container = document.createElement("div");
     container.className = "qp-pet-container";
-    container.setAttribute("data-pet-key", isStart ? `start-${index}` : `end-${index}`);
+    // Handle different trigger types
+    let keyPrefix;
+    if (trigger === true) {
+        keyPrefix = "start";
+    }
+    else if (trigger === false) {
+        keyPrefix = "end";
+    }
+    else {
+        keyPrefix = trigger; // "login" or other string values
+    }
+    container.setAttribute("data-pet-key", `${keyPrefix}-${index}`);
     // Create sprite with proper scaling and walk timing
     const sprite = createSprite({
         url: animalConfig.url,
@@ -289,10 +337,12 @@ function createPetContainer(animalConfig, isStart, index = 0) {
         heartWrapper.appendChild(heartSprite.el);
         // Add smooth transition for heart movement
         heartWrapper.style.transition = "left 90ms linear, top 90ms linear";
-        // Center horizontally on animal with more vertical offset
+        // Center horizontally on animal with scale-adjusted vertical offset
         const heartSize = 16 * 2.25; // 36px
+        // Use original offset for small animals (scale 2), larger offset for big animals (scale 3+)
+        const heartOffset = animalConfig.scale <= 2 ? 44 : 36; // 44px for small animals, 36px for large animals
         heartWrapper.style.left = `${currentX + (animalSize - heartSize) / 2}px`; // Center horizontally
-        heartWrapper.style.top = `${currentY - 48}px`; // More vertical offset (increased from 16px to 48px)
+        heartWrapper.style.top = `${currentY - heartOffset}px`; // Scale-appropriate offset
         container.appendChild(heartWrapper);
         // Custom heart animation sequence: row 1 → row 6 → row 6 → row 1 reverse
         let step = 0;
@@ -330,7 +380,7 @@ function createPetContainer(animalConfig, isStart, index = 0) {
                 const currentAnimalX = parseFloat(computedStyle.left) || currentX;
                 const currentAnimalY = parseFloat(computedStyle.top) || currentY;
                 heartWrapper.style.left = `${currentAnimalX + (animalSize - heartSize) / 2}px`; // Center horizontally
-                heartWrapper.style.top = `${currentAnimalY - 48}px`; // Maintain vertical offset
+                heartWrapper.style.top = `${currentAnimalY - heartOffset}px`; // Maintain scale-appropriate vertical offset
                 step++;
                 setTimeout(playCustomAnimation, 90); // ~11fps (1.5x slower than doubled)
             }
@@ -361,18 +411,55 @@ function createPetContainer(animalConfig, isStart, index = 0) {
 }
 // Find target elements and inject pets
 function scanAndInjectPets() {
-    // Look for "Start Attempt" button
+    // TEMPORARY: 100 animals for testing/benchmarking
+    const TESTING_MODE = true;
+    const TEST_ANIMAL_COUNT = 100;
+    if (TESTING_MODE) {
+        // Check if we haven't already spawned test animals
+        if (!document.querySelector('[data-pet-key^="test"]')) {
+            console.log(`🧪 TESTING MODE: Spawning ${TEST_ANIMAL_COUNT} animals for performance testing`);
+            console.time('Animal Creation');
+            for (let i = 0; i < TEST_ANIMAL_COUNT; i++) {
+                const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+                const petContainer = createPetContainer(randomAnimal, "test", i);
+                document.body.appendChild(petContainer);
+            }
+            console.timeEnd('Animal Creation');
+            console.log(`✅ Created ${TEST_ANIMAL_COUNT} test animals`);
+            // Log performance stats after a few seconds
+            setTimeout(() => {
+                const animalElements = document.querySelectorAll('.qp-animal');
+                console.log(`📊 Performance Stats:`);
+                console.log(`- Active animals: ${animalElements.length}`);
+                console.log(`- Document dimensions: ${document.documentElement.scrollWidth}x${document.documentElement.scrollHeight}`);
+                console.log(`- Viewport dimensions: ${window.innerWidth}x${window.innerHeight}`);
+            }, 3000);
+        }
+        return; // Skip normal logic in testing mode
+    }
+    // NORMAL MODE: Look for "Start Attempt" button
     const startElements = Array.from(document.querySelectorAll("button, input[type='submit'], a"));
     for (const el of startElements) {
         const text = el.textContent?.trim() || "";
         if (text.includes("Start Attempt") && !document.querySelector('[data-pet-key^="start"]')) {
-            // Create 3 random animals for start
-            for (let i = 0; i < 3; i++) {
+            // Create 1-3 random animals for start
+            const animalCount = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3 animals
+            for (let i = 0; i < animalCount; i++) {
                 const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
                 const petContainer = createPetContainer(randomAnimal, true, i);
                 document.body.appendChild(petContainer);
             }
             break;
+        }
+    }
+    // Check if we're on login page by URI
+    if (window.location.pathname.includes('/login/index.php') && !document.querySelector('[data-pet-key^="login"]')) {
+        // Create 1-3 random animals for login page
+        const animalCount = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3 animals
+        for (let i = 0; i < animalCount; i++) {
+            const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+            const petContainer = createPetContainer(randomAnimal, "login", i);
+            document.body.appendChild(petContainer);
         }
     }
     // Look for completion message
@@ -381,8 +468,9 @@ function scanAndInjectPets() {
         const text = p.textContent?.trim() || "";
         if (text.includes("You've finished the attempt, thank you for taking the quiz!") &&
             !document.querySelector('[data-pet-key^="end"]')) {
-            // Create 3 random animals for end
-            for (let i = 0; i < 3; i++) {
+            // Create 1-3 random animals for end
+            const animalCount = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3 animals
+            for (let i = 0; i < animalCount; i++) {
                 const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
                 const petContainer = createPetContainer(randomAnimal, false, i);
                 document.body.appendChild(petContainer);
