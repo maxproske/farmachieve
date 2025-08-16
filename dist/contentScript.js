@@ -184,6 +184,16 @@ const ANIMALS = [
         idleTime: [1500, 2500], // 1.5-2.5s idle
         moveSpeed: 1.8 // Fairly quick movement
     },
+    // Junimo - special case for attempt.php pages
+    {
+        name: "junimo",
+        url: "assets/junimo.png",
+        frameW: 16, frameH: 16, cols: 4, scale: 3,
+        moveChance: 0.0, // Special behavior - no wandering
+        idleTime: [0, 0], // Not used for junimo
+        moveSpeed: 1.0, // Not used for junimo
+        isJunimo: true // Special flag for junimo behavior
+    },
 ];
 // Check if reduced motion is preferred
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -460,6 +470,106 @@ function createPetContainer(animalConfig, trigger, index = 0) {
     container.appendChild(animal);
     return container;
 }
+// Special junimo creation function for reviewattempt.php pages
+function createJunimoReview(index, docHeight) {
+    const container = document.createElement("div");
+    container.className = "qp-pet-container";
+    container.setAttribute("data-pet-key", `junimo-review-${index}`);
+    // Create junimo element
+    const junimo = document.createElement("div");
+    junimo.className = "qp-animal";
+    junimo.setAttribute("aria-label", "Junimo");
+    junimo.style.pointerEvents = "none"; // Prevent cursor change on hover
+    // Create junimo sprite using the same pattern as other sprites
+    const spriteEl = document.createElement("div");
+    const scale = 1.5; // Half the size of other large animals (3/2 = 1.5)
+    const frameW = 16;
+    const frameH = 16;
+    const cols = 8; // 8x8 sprite sheet = 64 sprites total
+    spriteEl.style.width = `${frameW * scale}px`; // 24px
+    spriteEl.style.height = `${frameH * scale}px`; // 24px
+    spriteEl.style.backgroundImage = `url(${chrome.runtime.getURL("spritesheets/PC _ Computer - Stardew Valley - Animals - Junimo.png")})`;
+    spriteEl.style.backgroundRepeat = "no-repeat";
+    spriteEl.style.backgroundSize = `${cols * frameW * scale}px auto`; // 384px auto (8 * 16 * 3)
+    spriteEl.style.imageRendering = "pixelated";
+    junimo.appendChild(spriteEl);
+    // Animation variables - using 1-indexed frames for column 1
+    let currentFrame = 0; // 0-indexed (0 = frame 1, 1 = frame 2, etc.)
+    let animationDirection = 1;
+    let animationTimer = null;
+    // Animation function - row 1, frames 1->2->3->4->3->2 (1-indexed)
+    const animate = () => {
+        if (animationTimer !== null)
+            return;
+        animationTimer = window.setInterval(() => {
+            currentFrame += animationDirection;
+            // 1-indexed frames: 1->2->3->4->3->2
+            // 0-indexed frames: 0->1->2->3->2->1
+            if (currentFrame >= 3) { // Frame 4 (1-indexed)
+                animationDirection = -1;
+                currentFrame = 3;
+            }
+            else if (currentFrame <= 0) { // Frame 1 (1-indexed)
+                animationDirection = 1;
+                currentFrame = 0;
+            }
+            // Update background position to show correct frame
+            // Row 1 = y offset 0, frames 1-4 = x offsets 0-3
+            const x = -currentFrame * frameW * scale; // -currentFrame * 16 * 3
+            const y = 0; // Row 1 (first row)
+            spriteEl.style.backgroundPosition = `${x}px ${y}px`;
+        }, 1000 / 6); // 6fps
+    };
+    const stopAnimation = () => {
+        if (animationTimer !== null) {
+            clearInterval(animationTimer);
+            animationTimer = null;
+        }
+    };
+    // Position and movement - scattered throughout page height
+    const margin = 32;
+    const docWidth = Math.max(document.documentElement.scrollWidth, window.innerWidth);
+    // Random position scattered throughout the page height (skip first 800px)
+    const minSpacing = 12000; // 4x as rare
+    const maxSpacing = 20000; // 4x as rare
+    const baseY = 800 + margin + (index * (minSpacing + Math.random() * (maxSpacing - minSpacing))); // Start after 800px
+    const spawnX = margin + Math.random() * (docWidth - 24 - margin * 2);
+    const spawnY = Math.min(baseY, docHeight - 24 - margin); // Don't spawn below page
+    junimo.style.left = `${spawnX}px`;
+    junimo.style.top = `${spawnY}px`;
+    // Start animation immediately for idle period
+    animate();
+    // Trigger movement when junimo reaches 35% of viewport (higher up)
+    const checkPosition = () => {
+        const rect = junimo.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const triggerY = viewportHeight * 0.35; // 35% of viewport height (higher up)
+        if (rect.top <= triggerY) {
+            // Start moving away and fading
+            const finalY = spawnY + 80; // Move 5rem down
+            const moveDuration = 1500; // 1.5 seconds movement
+            // Start fading and moving simultaneously
+            junimo.style.transition = `top ${moveDuration}ms linear, opacity ${moveDuration}ms linear`;
+            junimo.style.top = `${finalY}px`;
+            junimo.style.opacity = "0";
+            // Cleanup after movement and fade complete
+            setTimeout(() => {
+                stopAnimation();
+                if (container.parentNode) {
+                    container.parentNode.removeChild(container);
+                }
+            }, moveDuration);
+        }
+        else {
+            // Check again in 100ms
+            setTimeout(checkPosition, 100);
+        }
+    };
+    // Start checking position after a short delay
+    setTimeout(checkPosition, 500);
+    container.appendChild(junimo);
+    return container;
+}
 // Find target elements and inject pets
 function scanAndInjectPets() {
     // TEMPORARY: 100 animals for testing/benchmarking
@@ -487,6 +597,16 @@ function scanAndInjectPets() {
             }, 3000);
         }
         return; // Skip normal logic in testing mode
+    }
+    // Check if we're on a reviewattempt.php page and spawn junimos (only once)
+    if (window.location.pathname.includes('reviewattempt.php') && !document.querySelector('[data-pet-key^="junimo-review"]')) {
+        // Spawn multiple junimos scattered throughout the page height
+        const docHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight);
+        const junimoCount = Math.floor(docHeight / 16000) + 1; // One junimo every 12000-20000px (4x as rare)
+        for (let i = 0; i < junimoCount; i++) {
+            const junimoContainer = createJunimoReview(i, docHeight);
+            document.body.appendChild(junimoContainer);
+        }
     }
     // NORMAL MODE: Look for "Start Attempt" button
     const startElements = Array.from(document.querySelectorAll("button, input[type='submit'], a"));
