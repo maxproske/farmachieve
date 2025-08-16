@@ -1,6 +1,57 @@
 "use strict";
 // Chrome Extension Content Script for FarmAchieve Quiz Pets
 // Adds wandering, pettable Stardew Valley farm animals to quiz pages
+// Highlight long text content in quiz questions
+function highlightLongText() {
+    const qtextElements = document.querySelectorAll('div.qtext');
+    qtextElements.forEach(qtextElement => {
+        // Get all direct children (text nodes and elements)
+        const children = Array.from(qtextElement.childNodes);
+        children.forEach(child => {
+            // Handle text nodes
+            if (child.nodeType === Node.TEXT_NODE) {
+                const text = child.textContent?.trim();
+                if (text && text.length > 20) {
+                    // Wrap text node in a span with highlight class
+                    const span = document.createElement('span');
+                    span.className = 'highlight';
+                    span.textContent = text;
+                    // Add click handler for toggle
+                    span.addEventListener('click', toggleHighlight);
+                    child.parentNode?.replaceChild(span, child);
+                }
+            }
+            // Handle element nodes
+            else if (child.nodeType === Node.ELEMENT_NODE) {
+                const element = child;
+                // Skip if already highlighted
+                if (element.classList.contains('highlight')) {
+                    return;
+                }
+                // Skip if element contains <u> tags
+                if (element.querySelector('u')) {
+                    return;
+                }
+                // Skip if element is a <u> tag itself
+                if (element.tagName.toLowerCase() === 'u') {
+                    return;
+                }
+                const text = element.textContent?.trim();
+                if (text && text.length > 20) {
+                    element.classList.add('highlight');
+                    // Add click handler for toggle
+                    element.addEventListener('click', toggleHighlight);
+                }
+            }
+        });
+    });
+}
+// Toggle highlight class on click
+function toggleHighlight(event) {
+    event.stopPropagation(); // Prevent event bubbling
+    const element = event.currentTarget;
+    element.classList.toggle('highlight');
+}
 // Sprite creation utility
 function createSprite(opts) {
     const scale = opts.scale ?? 4;
@@ -489,16 +540,18 @@ function debouncedScan() {
 }
 // Initialize
 function init() {
-    // Initial scan
+    // One-time text highlighting when page loads
+    highlightLongText();
+    // Initial pet scan
     scanAndInjectPets();
-    // Watch for dynamic changes
+    // Watch for dynamic changes (pets only)
     const observer = new MutationObserver(debouncedScan);
     observer.observe(document.body, {
         childList: true,
         subtree: true,
         characterData: true
     });
-    // Also scan on page visibility change (back button, etc.)
+    // Also scan on page visibility change (pets only)
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {
             setTimeout(scanAndInjectPets, 200);

@@ -4,33 +4,22 @@ Chrome extension (Manifest V3) that adds pettable farm animals to PharmAchieve m
 
 ## Getting started
 
-1. Run:
-```bash
-npm install
-npm run build
-```
-
-2. Load in Chrome:
-- Go to `chrome://extensions/`
-- Enable "Developer mode"
-- Click "Load unpacked" and select this folder
-
-3. Start and finish a quiz to see animals! 🐔 🐄 🦆
+1. Navigate to `chrome://extensions/`
+2. Enable "Developer mode"
+3. Click "Load unpacked" and select this folder
+3. Finish a quiz to see animals! 🐔 🐄 🦆
 
 ## Development
 
 ```bash
+npm install
 npm run dev     # Uses watch mode
 ```
 
 After changes, reload the extension in `chrome://extensions/` and refresh your test page.
 
-## File Structure
+## Publish
 
-```
-├── manifest.json          # Extension config
-├── src/contentScript.ts   # Main code
-├── dist/contentScript.js  # Compiled output (required)
-├── styles.css             # Styles
-└── assets/                # Animal sprites
+```bash
+npm run build
 ```

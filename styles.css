@@ -47,6 +47,12 @@
   image-rendering: crisp-edges;
 }
 
+/* Text highlighting for long content in quiz questions */
+.highlight {
+  background-color: yellow;
+  cursor: pointer;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .qp-animal {
