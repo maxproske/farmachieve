@@ -213,6 +213,79 @@ const ANIMALS = [
     idleTime: [1500, 2500], // 1.5-2.5s idle
     moveSpeed: 1.8 // Fairly quick movement
   },
+  // Baby animals - all color variants
+  { 
+    name: "calf_brown", 
+    url: "assets/calf_brown.png", 
+    frameW: 16, frameH: 16, cols: 4, scale: 2,
+    moveChance: 0.6, // Active babies
+    idleTime: [1500, 2500], // 1.5-2.5s idle
+    moveSpeed: 1.5 // Quick movement
+  },
+  { 
+    name: "calf_white", 
+    url: "assets/calf_white.png", 
+    frameW: 16, frameH: 16, cols: 4, scale: 2,
+    moveChance: 0.6, // Active babies
+    idleTime: [1500, 2500], // 1.5-2.5s idle
+    moveSpeed: 1.5 // Quick movement
+  },
+  { 
+    name: "chick_blue", 
+    url: "assets/chick_blue.png", 
+    frameW: 16, frameH: 16, cols: 4, scale: 2,
+    moveChance: 0.9, // Very active chicks
+    idleTime: [600, 1200], // 0.6-1.2s idle
+    moveSpeed: 1.0 // Fast movement
+  },
+  { 
+    name: "chick_brown", 
+    url: "assets/chick_brown.png", 
+    frameW: 16, frameH: 16, cols: 4, scale: 2,
+    moveChance: 0.9, // Very active chicks
+    idleTime: [600, 1200], // 0.6-1.2s idle
+    moveSpeed: 1.0 // Fast movement
+  },
+  { 
+    name: "chick_void", 
+    url: "assets/chick_void.png", 
+    frameW: 16, frameH: 16, cols: 4, scale: 2,
+    moveChance: 0.9, // Very active chicks
+    idleTime: [600, 1200], // 0.6-1.2s idle
+    moveSpeed: 1.0 // Fast movement
+  },
+  { 
+    name: "chick_white", 
+    url: "assets/chick_white.png", 
+    frameW: 16, frameH: 16, cols: 4, scale: 2,
+    moveChance: 0.9, // Very active chicks
+    idleTime: [600, 1200], // 0.6-1.2s idle
+    moveSpeed: 1.0 // Fast movement
+  },
+  { 
+    name: "goat_baby", 
+    url: "assets/goat_baby.png", 
+    frameW: 16, frameH: 16, cols: 4, scale: 2,
+    moveChance: 0.7, // Active baby goats
+    idleTime: [1200, 2000], // 1.2-2s idle
+    moveSpeed: 1.3 // Quick movement
+  },
+  { 
+    name: "sheep_baby", 
+    url: "assets/sheep_baby.png", 
+    frameW: 16, frameH: 16, cols: 4, scale: 2,
+    moveChance: 0.7, // Active baby sheep
+    idleTime: [1200, 2000], // 1.2-2s idle
+    moveSpeed: 1.3 // Quick movement
+  },
+  { 
+    name: "piglet", 
+    url: "assets/piglet.png", 
+    frameW: 16, frameH: 16, cols: 4, scale: 2,
+    moveChance: 0.8, // Active piglets
+    idleTime: [1000, 1800], // 1-1.8s idle
+    moveSpeed: 1.2 // Quick movement
+  },
   // Junimo - special case for attempt.php pages
   { 
     name: "junimo", 
@@ -672,8 +745,9 @@ function scanAndInjectPets(): void {
       console.log(`🧪 TESTING MODE: Spawning ${TEST_ANIMAL_COUNT} animals for performance testing`);
       console.time('Animal Creation');
       
+      const wanderingAnimals = ANIMALS.filter(animal => !animal.isJunimo); // Exclude junimos from wandering
       for (let i = 0; i < TEST_ANIMAL_COUNT; i++) {
-        const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+        const randomAnimal = wanderingAnimals[Math.floor(Math.random() * wanderingAnimals.length)];
         const petContainer = createPetContainer(randomAnimal, "test", i);
         document.body.appendChild(petContainer);
       }
@@ -710,10 +784,11 @@ function scanAndInjectPets(): void {
   for (const el of startElements) {
     const text = el.textContent?.trim() || "";
     if (text.includes("Start Attempt") && !document.querySelector('[data-pet-key^="start"]')) {
-      // Create 1-2 random animals for start
+      // Create 1-2 random animals for start (excluding junimos)
       const animalCount = 1 + Math.floor(Math.random() * 2); // 1 or 2 animals
+      const wanderingAnimals = ANIMALS.filter(animal => !animal.isJunimo); // Exclude junimos from wandering
       for (let i = 0; i < animalCount; i++) {
-        const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+        const randomAnimal = wanderingAnimals[Math.floor(Math.random() * wanderingAnimals.length)];
         const petContainer = createPetContainer(randomAnimal, true, i);
         document.body.appendChild(petContainer);
       }
@@ -723,10 +798,11 @@ function scanAndInjectPets(): void {
 
   // Check if we're on login page by URI
   if (window.location.pathname.includes('/login/index.php') && !document.querySelector('[data-pet-key^="login"]')) {
-    // Create 1-2 random animals for login page
+    // Create 1-2 random animals for login page (excluding junimos)
     const animalCount = 1 + Math.floor(Math.random() * 2); // 1 or 2 animals
+    const wanderingAnimals = ANIMALS.filter(animal => !animal.isJunimo); // Exclude junimos from wandering
     for (let i = 0; i < animalCount; i++) {
-      const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+      const randomAnimal = wanderingAnimals[Math.floor(Math.random() * wanderingAnimals.length)];
       const petContainer = createPetContainer(randomAnimal, "login", i);
       document.body.appendChild(petContainer);
     }
@@ -738,10 +814,11 @@ function scanAndInjectPets(): void {
     const text = p.textContent?.trim() || "";
     if (text.includes("You've finished the attempt, thank you for taking the quiz!") && 
         !document.querySelector('[data-pet-key^="end"]')) {
-      // Create 3-5 random animals for end
+      // Create 3-5 random animals for end (excluding junimos)
       const animalCount = 3 + Math.floor(Math.random() * 3); // 3, 4, or 5 animals
+      const wanderingAnimals = ANIMALS.filter(animal => !animal.isJunimo); // Exclude junimos from wandering
       for (let i = 0; i < animalCount; i++) {
-        const randomAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+        const randomAnimal = wanderingAnimals[Math.floor(Math.random() * wanderingAnimals.length)];
         const petContainer = createPetContainer(randomAnimal, false, i);
         document.body.appendChild(petContainer);
       }
